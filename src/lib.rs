@@ -1,3 +1,6 @@
+/// Epsilon used for floating-point comparisons
+const EPSILON: f64 = 1e-6;
+
 struct RayTracerTuple {
     pub x: f64,
     pub y: f64,
@@ -25,13 +28,24 @@ impl RayTracerTuple {
     pub fn is_vector(&self) -> bool {
         self.w == 0
     }
+
+    /// Test if this tuple is equal to another.
+    /// Note that this only considers the cartesian coordinates of the two tuples.
+    pub fn is_equal_to(&self, other: &RayTracerTuple) -> bool {
+        if (self.x - other.x).abs() < EPSILON {
+            if (self.y - other.y).abs() < EPSILON {
+                if (self.z - other.z).abs() < EPSILON {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    static EPSILON: f64 = 1e-6;
 
     #[test]
     fn tuple_new_point() {
@@ -53,5 +67,20 @@ mod tests {
         assert_eq!(tuple.w, 0);
         assert!(!tuple.is_point());
         assert!(tuple.is_vector());
+    }
+
+    #[test]
+    fn tuple_is_equal_to() {
+        let point = RayTracerTuple::new_point(4.3, -4.2, 3.1);
+        let vector = RayTracerTuple::new_vector(4.3, -4.2, 3.1);
+        assert!(point.is_equal_to(&vector));
+        assert!(vector.is_equal_to(&point));
+
+        let not_quite_different = RayTracerTuple::new_point(4.3 + 1e-7, -4.2, 3.1);
+        assert!(point.is_equal_to(&not_quite_different));
+
+        let barely_different = RayTracerTuple::new_point(4.3 + EPSILON, -4.2, 3.1);
+        assert!(!point.is_equal_to(&barely_different));
+
     }
 }
