@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 /// Epsilon used for floating-point comparisons
 const EPSILON: f64 = 1e-6;
@@ -7,7 +7,7 @@ struct RayTracerTuple {
     pub x: f64,
     pub y: f64,
     pub z: f64,
-    pub w: u8,
+    pub w: i8,
 }
 
 impl RayTracerTuple {
@@ -63,6 +63,21 @@ impl<'a, 'b> Add<&'b RayTracerTuple> for &'a RayTracerTuple {
     }
 }
 
+/// Similar comments to those for `Add`.
+impl<'a, 'b> Sub<&'b RayTracerTuple> for &'a RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Subtract two tuple reference.
+    fn sub(self, rhs: &'b RayTracerTuple) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+            w: self.w - rhs.w,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -110,11 +125,35 @@ mod tests {
 
         let point1_plus_vector1 = &point1 + &vector1;
         assert!(point1_plus_vector1.is_equal_to(&RayTracerTuple::new_point(1.0, 1.0, 6.0)));
-        assert_eq!(1, point1_plus_vector1.w);
+        assert!(point1_plus_vector1.is_point());
 
         let point2 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
         let point1_plus_point2 = &point1 + &point2;
         assert!(point1_plus_point2.is_equal_to(&RayTracerTuple::new_point(6.0, -4.0, 10.0)));
-        assert_eq!(2, point1_plus_point2.w);
+        assert_eq!(2, point1_plus_point2.w); // a weird reality
+    }
+
+    #[test]
+    fn tuple_sub_refs() {
+        let point1 = RayTracerTuple::new_point(3.0, 2.0, 1.0);
+        let point2 = RayTracerTuple::new_point(5.0, 6.0, 7.0);
+
+        let point1_minus_point2 = &point1 - &point2;
+        assert!(point1_minus_point2.is_equal_to(&RayTracerTuple::new_vector(-2.0, -4.0, -6.0)));
+        assert!(point1_minus_point2.is_vector());
+
+        let vector1 = RayTracerTuple::new_vector(5.0, 6.0, 7.0);
+        let point1_minus_vector1 = &point1 - &vector1;
+        assert!(point1_minus_vector1.is_equal_to(&RayTracerTuple::new_vector(-2.0, -4.0, -6.0)));
+        assert!(point1_minus_vector1.is_point());
+
+        let vector2 = RayTracerTuple::new_vector(3.0, 2.0, 1.0);
+        let vector2_minus_vector1 = &vector2 - &vector1;
+        assert!(vector2_minus_vector1.is_equal_to(&RayTracerTuple::new_vector(-2.0, -4.0, -6.0)));
+        assert!(vector2_minus_vector1.is_vector());
+
+        let vector1_minus_point1 = &vector1 - &point1;
+        assert!(vector1_minus_point1.is_equal_to(&RayTracerTuple::new_point(2.0, 4.0, 6.0)));
+        assert_eq!(-1, vector1_minus_point1.w); // a weird reality
     }
 }
