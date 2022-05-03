@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 /// Epsilon used for floating-point comparisons
 const EPSILON: f64 = 1e-6;
 
@@ -43,6 +45,24 @@ impl RayTracerTuple {
     }
 }
 
+/// Implement the `Add` trait specifically for tuple references.
+/// For any tuple reference with lifetime `a`, implement `Add` for it such that it can be added with another tuple reference with a different lifetime `b`.
+/// We want to implement this trait for reference tuples because we want to be able to use the operands afterwards
+/// (i.e., we do not want the `add` function to own the operands).
+impl<'a, 'b> Add<&'b RayTracerTuple> for &'a RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Add two tuple references.
+    fn add(self, rhs: &'b RayTracerTuple) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+            w: self.w + rhs.w,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -81,6 +101,20 @@ mod tests {
 
         let barely_different = RayTracerTuple::new_point(4.3 + EPSILON, -4.2, 3.1);
         assert!(!point.is_equal_to(&barely_different));
+    }
 
+    #[test]
+    fn tuple_add_refs() {
+        let point1 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
+        let vector1 = RayTracerTuple::new_vector(-2.0, 3.0, 1.0);
+
+        let point1_plus_vector1 = &point1 + &vector1;
+        assert!(point1_plus_vector1.is_equal_to(&RayTracerTuple::new_point(1.0, 1.0, 6.0)));
+        assert_eq!(1, point1_plus_vector1.w);
+
+        let point2 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
+        let point1_plus_point2 = &point1 + &point2;
+        assert!(point1_plus_point2.is_equal_to(&RayTracerTuple::new_point(6.0, -4.0, 10.0)));
+        assert_eq!(2, point1_plus_point2.w);
     }
 }
