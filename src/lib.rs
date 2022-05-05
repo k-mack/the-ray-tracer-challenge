@@ -1,4 +1,4 @@
-use std::ops::{Add, Neg, Sub};
+use std::ops::{Add, Mul, Neg, Sub};
 
 /// Epsilon used for floating-point comparisons
 const EPSILON: f64 = 1e-6;
@@ -7,28 +7,28 @@ struct RayTracerTuple {
     pub x: f64,
     pub y: f64,
     pub z: f64,
-    pub w: i8,
+    pub w: f64,
 }
 
 impl RayTracerTuple {
     /// Create a point tuple.
     pub fn new_point(x: f64, y: f64, z: f64) -> Self {
-        Self { x, y, z, w: 1 }
+        Self { x, y, z, w: 1.0 }
     }
 
     /// Create a vector tuple
     pub fn new_vector(x: f64, y: f64, z: f64) -> Self {
-        Self { x, y, z, w: 0 }
+        Self { x, y, z, w: 0.0 }
     }
 
     /// Test if the tuple is a point.
     pub fn is_point(&self) -> bool {
-        self.w == 1
+        (self.w - 1.0).abs() < EPSILON
     }
 
     /// Test if the tuple is a point.
     pub fn is_vector(&self) -> bool {
-        self.w == 0
+        self.w.abs() < EPSILON
     }
 
     /// Test if this tuple is equal to another.
@@ -78,7 +78,7 @@ impl<'a, 'b> Sub<&'b RayTracerTuple> for &'a RayTracerTuple {
     }
 }
 
-//// Similar comment to those for `Add`.
+//// Similar comments to those for `Add`.
 impl<'a> Neg for &'a RayTracerTuple {
     type Output = RayTracerTuple;
 
@@ -88,6 +88,20 @@ impl<'a> Neg for &'a RayTracerTuple {
             y: -self.y,
             z: -self.z,
             w: -self.w,
+        }
+    }
+}
+
+//// Similar comments to those for `Add`.
+impl<'a> Mul<f64> for &'a RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    fn mul(self, rhs: f64) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
+            w: self.w * rhs,
         }
     }
 }
@@ -102,7 +116,7 @@ mod tests {
         assert!((tuple.x - 4.3).abs() < EPSILON);
         assert!((tuple.y - -4.2).abs() < EPSILON);
         assert!((tuple.z - 3.1).abs() < EPSILON);
-        assert_eq!(tuple.w, 1);
+        assert!((tuple.w - 1.0).abs() < EPSILON);
         assert!(tuple.is_point());
         assert!(!tuple.is_vector());
     }
@@ -113,7 +127,7 @@ mod tests {
         assert!((tuple.x - 4.3).abs() < EPSILON);
         assert!((tuple.y - -4.2).abs() < EPSILON);
         assert!((tuple.z - 3.1).abs() < EPSILON);
-        assert_eq!(tuple.w, 0);
+        assert!(tuple.w.abs() < EPSILON);
         assert!(!tuple.is_point());
         assert!(tuple.is_vector());
     }
@@ -144,7 +158,7 @@ mod tests {
         let point2 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
         let point1_plus_point2 = &point1 + &point2;
         assert!(point1_plus_point2.is_equal_to(&RayTracerTuple::new_point(6.0, -4.0, 10.0)));
-        assert_eq!(2, point1_plus_point2.w); // a weird reality
+        assert!((point1_plus_point2.w - 2.0).abs() < EPSILON); // a weird reality
     }
 
     #[test]
@@ -168,7 +182,7 @@ mod tests {
 
         let vector1_minus_point1 = &vector1 - &point1;
         assert!(vector1_minus_point1.is_equal_to(&RayTracerTuple::new_point(2.0, 4.0, 6.0)));
-        assert_eq!(-1, vector1_minus_point1.w); // a weird reality
+        assert!((vector1_minus_point1.w - -1.0).abs() < EPSILON); // a weird reality
     }
 
     #[test]
@@ -177,18 +191,40 @@ mod tests {
             x: 1.0,
             y: -2.0,
             z: 3.0,
-            w: -4,
+            w: -4.0,
         };
         let neg_tuple = -&tuple;
         assert!((neg_tuple.x - -1.0).abs() < EPSILON);
         assert!((neg_tuple.y - 2.0).abs() < EPSILON);
         assert!((neg_tuple.z - -3.0).abs() < EPSILON);
-        assert_eq!(neg_tuple.w, 4);
+        assert!((neg_tuple.w - 4.0).abs() < EPSILON);
 
         let neg_neg_tuple = -&-&tuple; // reference types are fun :)
         assert!((neg_neg_tuple.x - 1.0).abs() < EPSILON);
         assert!((neg_neg_tuple.y - -2.0).abs() < EPSILON);
         assert!((neg_neg_tuple.z - 3.0).abs() < EPSILON);
-        assert_eq!(neg_neg_tuple.w, -4);
+        assert!((neg_neg_tuple.w - -4.0).abs() < EPSILON);
+    }
+
+    #[test]
+    fn tuple_mul_refs() {
+        let tuple = RayTracerTuple {
+            x: 1.0,
+            y: -2.0,
+            z: 3.0,
+            w: -4.0,
+        };
+
+        let tuple_mul = &tuple * 3.5;
+        assert!((tuple_mul.x - 3.5).abs() < EPSILON);
+        assert!((tuple_mul.y - -7.0).abs() < EPSILON);
+        assert!((tuple_mul.z - 10.5).abs() < EPSILON);
+        assert!((tuple_mul.w - -14.0).abs() < EPSILON);
+
+        let tuple_mul = &tuple * 0.5;
+        assert!((tuple_mul.x - 0.5).abs() < EPSILON);
+        assert!((tuple_mul.y - -1.0).abs() < EPSILON);
+        assert!((tuple_mul.z - 1.5).abs() < EPSILON);
+        assert!((tuple_mul.w - -2.0).abs() < EPSILON);
     }
 }
