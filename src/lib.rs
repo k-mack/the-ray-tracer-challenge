@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub};
+use std::ops::{Add, Neg, Sub};
 
 /// Epsilon used for floating-point comparisons
 const EPSILON: f64 = 1e-6;
@@ -74,6 +74,20 @@ impl<'a, 'b> Sub<&'b RayTracerTuple> for &'a RayTracerTuple {
             y: self.y - rhs.y,
             z: self.z - rhs.z,
             w: self.w - rhs.w,
+        }
+    }
+}
+
+//// Similar comment to those for `Add`.
+impl<'a> Neg for &'a RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    fn neg(self) -> RayTracerTuple {
+        RayTracerTuple {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+            w: -self.w,
         }
     }
 }
@@ -155,5 +169,26 @@ mod tests {
         let vector1_minus_point1 = &vector1 - &point1;
         assert!(vector1_minus_point1.is_equal_to(&RayTracerTuple::new_point(2.0, 4.0, 6.0)));
         assert_eq!(-1, vector1_minus_point1.w); // a weird reality
+    }
+
+    #[test]
+    fn tuple_neg_refs() {
+        let tuple = RayTracerTuple {
+            x: 1.0,
+            y: -2.0,
+            z: 3.0,
+            w: -4,
+        };
+        let neg_tuple = -&tuple;
+        assert!((neg_tuple.x - -1.0).abs() < EPSILON);
+        assert!((neg_tuple.y - 2.0).abs() < EPSILON);
+        assert!((neg_tuple.z - -3.0).abs() < EPSILON);
+        assert_eq!(neg_tuple.w, 4);
+
+        let neg_neg_tuple = -&-&tuple; // reference types are fun :)
+        assert!((neg_neg_tuple.x - 1.0).abs() < EPSILON);
+        assert!((neg_neg_tuple.y - -2.0).abs() < EPSILON);
+        assert!((neg_neg_tuple.z - 3.0).abs() < EPSILON);
+        assert_eq!(neg_neg_tuple.w, -4);
     }
 }
