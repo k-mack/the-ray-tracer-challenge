@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Epsilon used for floating-point comparisons
 const EPSILON: f64 = 1e-6;
@@ -102,6 +102,20 @@ impl<'a> Mul<f64> for &'a RayTracerTuple {
             y: self.y * rhs,
             z: self.z * rhs,
             w: self.w * rhs,
+        }
+    }
+}
+
+//// Similar comments to those for `Add`.
+impl<'a> Div<f64> for &'a RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    fn div(self, rhs: f64) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+            w: self.w / rhs,
         }
     }
 }
@@ -226,5 +240,21 @@ mod tests {
         assert!((tuple_mul.y - -1.0).abs() < EPSILON);
         assert!((tuple_mul.z - 1.5).abs() < EPSILON);
         assert!((tuple_mul.w - -2.0).abs() < EPSILON);
+    }
+
+    #[test]
+    fn tuple_div_refs() {
+        let tuple = RayTracerTuple {
+            x: 1.0,
+            y: -2.0,
+            z: 3.0,
+            w: -4.0,
+        };
+
+        let tuple_div = &tuple / 2.0;
+        assert!((tuple_div.x - 0.5).abs() < EPSILON);
+        assert!((tuple_div.y - -1.0).abs() < EPSILON);
+        assert!((tuple_div.z - 1.5).abs() < EPSILON);
+        assert!((tuple_div.w - -2.0).abs() < EPSILON);
     }
 }
