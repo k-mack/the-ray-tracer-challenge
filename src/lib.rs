@@ -45,14 +45,63 @@ impl RayTracerTuple {
     }
 }
 
-/// Implement the `Add` trait specifically for tuple references.
-/// For any tuple reference with lifetime `a`, implement `Add` for it such that it can be added with another tuple reference with a different lifetime `b`.
-/// We want to implement this trait for reference tuples because we want to be able to use the operands afterwards
-/// (i.e., we do not want the `add` function to own the operands).
+//
+// Implement the `Add` trait for a tuple.
+//
+
+impl Add for RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Add two tuples, consuming both and returning a new tuple.
+    fn add(self, rhs: RayTracerTuple) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+            w: self.w + rhs.w,
+        }
+    }
+}
+
+impl Add<&RayTracerTuple> for RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Add a reference tuple to a tuple, consuming the left-hand-side tuple, borrowing the right-hand-side tuple, and returning a new tuple.
+    fn add(self, rhs: &RayTracerTuple) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+            w: self.w + rhs.w,
+        }
+    }
+}
+
+//
+// Implement the `Add` trait for a tuple reference.
+//
+
+impl Add<RayTracerTuple> for &RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Add a tuple to a tuple reference, borrowing the left-hand-side tuple, consuming the right-hand-side tuple, and returning a new tuple.
+    fn add(self, rhs: RayTracerTuple) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+            w: self.w + rhs.w,
+        }
+    }
+}
+
+// For any tuple reference with lifetime `a`, implement `Add` for it such that it can be added with another tuple reference with a different lifetime `b`.
+// We want to implement this trait for reference tuples because we want to be able to use the operands afterwards
+// (i.e., we do not want the `add` function to own the operands).
 impl<'a, 'b> Add<&'b RayTracerTuple> for &'a RayTracerTuple {
     type Output = RayTracerTuple;
 
-    /// Add two tuple references.
+    /// Add two tuple references, borrowing both and returning a new tuple.
     fn add(self, rhs: &'b RayTracerTuple) -> RayTracerTuple {
         RayTracerTuple {
             x: self.x + rhs.x,
@@ -63,11 +112,63 @@ impl<'a, 'b> Add<&'b RayTracerTuple> for &'a RayTracerTuple {
     }
 }
 
-/// Similar comments to those for `Add`.
+//
+// Implement the `Sub` trait for a tuple.
+//
+
+impl Sub for RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Subtract two tuples, consuming both and returning a new tuple.
+    fn sub(self, rhs: RayTracerTuple) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+            w: self.w - rhs.w,
+        }
+    }
+}
+
+impl Sub<&RayTracerTuple> for RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Subtract a reference tuple from a tuple, consuming the left-hand-side tuple, borrowing the right-hand-side tuple, and returning a new tuple.
+    fn sub(self, rhs: &RayTracerTuple) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+            w: self.w - rhs.w,
+        }
+    }
+}
+
+//
+// Implement the `Sub` trait for a tuple reference.
+//
+
+impl Sub<RayTracerTuple> for &RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Subtract a tuple from a tuple reference, borrowing the left-hand-side tuple, consuming the right-hand-side tuple, and returning a new tuple.
+    fn sub(self, rhs: RayTracerTuple) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+            w: self.w - rhs.w,
+        }
+    }
+}
+
+// For any tuple reference with lifetime `a`, implement `Sub` for it such that it can be added with another tuple reference with a different lifetime `b`.
+// We want to implement this trait for reference tuples because we want to be able to use the operands afterwards
+// (i.e., we do not want the `sub` function to own the operands).
 impl<'a, 'b> Sub<&'b RayTracerTuple> for &'a RayTracerTuple {
     type Output = RayTracerTuple;
 
-    /// Subtract two tuple reference.
+    /// Add two tuple references, borrowing both and returning a new tuple.
     fn sub(self, rhs: &'b RayTracerTuple) -> RayTracerTuple {
         RayTracerTuple {
             x: self.x - rhs.x,
@@ -161,39 +262,67 @@ mod tests {
     }
 
     #[test]
-    fn tuple_add_refs() {
+    fn tuple_add() {
         let point1 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
         let vector1 = RayTracerTuple::new_vector(-2.0, 3.0, 1.0);
 
-        let point1_plus_vector1 = &point1 + &vector1;
+        let point1_plus_vector1 = point1 + vector1;
         assert!(point1_plus_vector1.is_equal_to(&RayTracerTuple::new_point(1.0, 1.0, 6.0)));
         assert!(point1_plus_vector1.is_point());
 
+        // Add tuples
+        let point1 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
+        let point2 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
+        let point1_plus_point2 = point1 + point2;
+        assert!(point1_plus_point2.is_equal_to(&RayTracerTuple::new_point(6.0, -4.0, 10.0)));
+        assert!((point1_plus_point2.w - 2.0).abs() < EPSILON); // a weird reality
+
+        // Add a reference tuple to a tuple
+        let point1 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
+        let point2 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
+        let point1_plus_point2 = point1 + &point2;
+        assert!(point1_plus_point2.is_equal_to(&RayTracerTuple::new_point(6.0, -4.0, 10.0)));
+        assert!((point1_plus_point2.w - 2.0).abs() < EPSILON);
+
+        // Add a tuple to a reference tuple
+        let point1 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
+        let point1_plus_point2 = &point1 + point2;
+        assert!(point1_plus_point2.is_equal_to(&RayTracerTuple::new_point(6.0, -4.0, 10.0)));
+        assert!((point1_plus_point2.w - 2.0).abs() < EPSILON);
+
+        // Add two reference tuples
         let point2 = RayTracerTuple::new_point(3.0, -2.0, 5.0);
         let point1_plus_point2 = &point1 + &point2;
         assert!(point1_plus_point2.is_equal_to(&RayTracerTuple::new_point(6.0, -4.0, 10.0)));
-        assert!((point1_plus_point2.w - 2.0).abs() < EPSILON); // a weird reality
+        assert!((point1_plus_point2.w - 2.0).abs() < EPSILON);
     }
 
     #[test]
-    fn tuple_sub_refs() {
+    fn tuple_sub() {
         let point1 = RayTracerTuple::new_point(3.0, 2.0, 1.0);
         let point2 = RayTracerTuple::new_point(5.0, 6.0, 7.0);
 
-        let point1_minus_point2 = &point1 - &point2;
+        // Subtract tuples
+        let point1_minus_point2 = point1 - point2;
         assert!(point1_minus_point2.is_equal_to(&RayTracerTuple::new_vector(-2.0, -4.0, -6.0)));
         assert!(point1_minus_point2.is_vector());
 
+        // Subtract a reference tuple from a tuple
+        let point1 = RayTracerTuple::new_point(3.0, 2.0, 1.0);
         let vector1 = RayTracerTuple::new_vector(5.0, 6.0, 7.0);
-        let point1_minus_vector1 = &point1 - &vector1;
+        let point1_minus_vector1 = point1 - &vector1;
         assert!(point1_minus_vector1.is_equal_to(&RayTracerTuple::new_vector(-2.0, -4.0, -6.0)));
         assert!(point1_minus_vector1.is_point());
 
+        // Subtract a tuple from a reference tuple
         let vector2 = RayTracerTuple::new_vector(3.0, 2.0, 1.0);
-        let vector2_minus_vector1 = &vector2 - &vector1;
+        let vector2_minus_vector1 = &vector2 - vector1;
         assert!(vector2_minus_vector1.is_equal_to(&RayTracerTuple::new_vector(-2.0, -4.0, -6.0)));
         assert!(vector2_minus_vector1.is_vector());
 
+        // Subtract two reference tuples
+        let point1 = RayTracerTuple::new_point(3.0, 2.0, 1.0);
+        let vector1 = RayTracerTuple::new_vector(5.0, 6.0, 7.0);
         let vector1_minus_point1 = &vector1 - &point1;
         assert!(vector1_minus_point1.is_equal_to(&RayTracerTuple::new_point(2.0, 4.0, 6.0)));
         assert!((vector1_minus_point1.w - -1.0).abs() < EPSILON); // a weird reality
