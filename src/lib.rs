@@ -179,10 +179,14 @@ impl<'a, 'b> Sub<&'b RayTracerTuple> for &'a RayTracerTuple {
     }
 }
 
-//// Similar comments to those for `Add`.
-impl<'a> Neg for &'a RayTracerTuple {
+//
+// Implement the `Neg` trait for a tuple.
+//
+
+impl Neg for RayTracerTuple {
     type Output = RayTracerTuple;
 
+    /// Negate tuple, consuming the tuple and returning a new tuple.
     fn neg(self) -> RayTracerTuple {
         RayTracerTuple {
             x: -self.x,
@@ -193,10 +197,32 @@ impl<'a> Neg for &'a RayTracerTuple {
     }
 }
 
-//// Similar comments to those for `Add`.
-impl<'a> Mul<f64> for &'a RayTracerTuple {
+//
+// Implement the `Neg` trait for a tuple reference.
+//
+
+impl Neg for &RayTracerTuple {
     type Output = RayTracerTuple;
 
+    /// Negate tuple reference, borrowing the tuple reference and returning a new tuple.
+    fn neg(self) -> RayTracerTuple {
+        RayTracerTuple {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+            w: -self.w,
+        }
+    }
+}
+
+//
+// Implement the `Mul` trait for a tuple for it to be multiplied by an f64.
+//
+
+impl Mul<f64> for RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Multiply a tuple by an f64, consuming the left-hand-side tuple, consuming the right-hand-side tuple, and returning a new tuple.
     fn mul(self, rhs: f64) -> RayTracerTuple {
         RayTracerTuple {
             x: self.x * rhs,
@@ -207,10 +233,46 @@ impl<'a> Mul<f64> for &'a RayTracerTuple {
     }
 }
 
-//// Similar comments to those for `Add`.
-impl<'a> Div<f64> for &'a RayTracerTuple {
+//
+// Implement the `Mul` trait for a tuple reference for it to be multiplied by an f64.
+//
+
+impl Mul<f64> for &RayTracerTuple {
     type Output = RayTracerTuple;
 
+    /// Multiply a tuple reference by an f64, borrowing the left-hand-side tuple, consuming the right-hand-side tuple, and returning a new tuple.
+    fn mul(self, rhs: f64) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
+            w: self.w * rhs,
+        }
+    }
+}
+
+///
+// Implement the `Div` trait for a tuple for it to be divided by an f64.
+//
+
+impl Div<f64> for RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Divide a tuple by an f64, consuming the left-hand-side tuple, consuming the right-hand-side tuple, and returning a new tuple.
+    fn div(self, rhs: f64) -> RayTracerTuple {
+        RayTracerTuple {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+            w: self.w / rhs,
+        }
+    }
+}
+
+impl Div<f64> for &RayTracerTuple {
+    type Output = RayTracerTuple;
+
+    /// Divide a tuple reference by an f64, borrowing the left-hand-side tuple, consuming the right-hand-side tuple, and returning a new tuple.
     fn div(self, rhs: f64) -> RayTracerTuple {
         RayTracerTuple {
             x: self.x / rhs,
@@ -329,13 +391,27 @@ mod tests {
     }
 
     #[test]
-    fn tuple_neg_refs() {
+    fn tuple_neg() {
         let tuple = RayTracerTuple {
             x: 1.0,
             y: -2.0,
             z: 3.0,
             w: -4.0,
         };
+
+        let neg_tuple = -tuple;
+        assert!((neg_tuple.x - -1.0).abs() < EPSILON);
+        assert!((neg_tuple.y - 2.0).abs() < EPSILON);
+        assert!((neg_tuple.z - -3.0).abs() < EPSILON);
+        assert!((neg_tuple.w - 4.0).abs() < EPSILON);
+
+        let tuple = RayTracerTuple {
+            x: 1.0,
+            y: -2.0,
+            z: 3.0,
+            w: -4.0,
+        };
+
         let neg_tuple = -&tuple;
         assert!((neg_tuple.x - -1.0).abs() < EPSILON);
         assert!((neg_tuple.y - 2.0).abs() < EPSILON);
@@ -350,7 +426,7 @@ mod tests {
     }
 
     #[test]
-    fn tuple_mul_refs() {
+    fn tuple_mul() {
         let tuple = RayTracerTuple {
             x: 1.0,
             y: -2.0,
@@ -358,11 +434,18 @@ mod tests {
             w: -4.0,
         };
 
-        let tuple_mul = &tuple * 3.5;
+        let tuple_mul = tuple * 3.5;
         assert!((tuple_mul.x - 3.5).abs() < EPSILON);
         assert!((tuple_mul.y - -7.0).abs() < EPSILON);
         assert!((tuple_mul.z - 10.5).abs() < EPSILON);
         assert!((tuple_mul.w - -14.0).abs() < EPSILON);
+
+        let tuple = RayTracerTuple {
+            x: 1.0,
+            y: -2.0,
+            z: 3.0,
+            w: -4.0,
+        };
 
         let tuple_mul = &tuple * 0.5;
         assert!((tuple_mul.x - 0.5).abs() < EPSILON);
@@ -372,7 +455,7 @@ mod tests {
     }
 
     #[test]
-    fn tuple_div_refs() {
+    fn tuple_div() {
         let tuple = RayTracerTuple {
             x: 1.0,
             y: -2.0,
@@ -381,6 +464,12 @@ mod tests {
         };
 
         let tuple_div = &tuple / 2.0;
+        assert!((tuple_div.x - 0.5).abs() < EPSILON);
+        assert!((tuple_div.y - -1.0).abs() < EPSILON);
+        assert!((tuple_div.z - 1.5).abs() < EPSILON);
+        assert!((tuple_div.w - -2.0).abs() < EPSILON);
+
+        let tuple_div = tuple / 2.0;
         assert!((tuple_div.x - 0.5).abs() < EPSILON);
         assert!((tuple_div.y - -1.0).abs() < EPSILON);
         assert!((tuple_div.z - 1.5).abs() < EPSILON);
