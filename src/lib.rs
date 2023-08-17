@@ -3,6 +3,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 /// Epsilon used for floating-point comparisons
 const EPSILON: f64 = 1e-6;
 
+#[derive(Debug, Default)]
 struct RayTracerTuple {
     pub x: f64,
     pub y: f64,
@@ -26,7 +27,7 @@ impl RayTracerTuple {
         (self.w - 1.0).abs() < EPSILON
     }
 
-    /// Test if the tuple is a point.
+    /// Test if the tuple is a vector.
     pub fn is_vector(&self) -> bool {
         self.w.abs() < EPSILON
     }
@@ -34,13 +35,19 @@ impl RayTracerTuple {
     /// Test if this tuple is equal to another.
     /// Note that this only considers the cartesian coordinates of the two tuples.
     pub fn is_equal_to(&self, other: &RayTracerTuple) -> bool {
-        if (self.x - other.x).abs() < EPSILON
+        (self.x - other.x).abs() < EPSILON
             && (self.y - other.y).abs() < EPSILON
             && (self.z - other.z).abs() < EPSILON
-        {
-            return true;
-        }
-        false
+    }
+
+    /// Compute the magnitude of the tuple.
+    pub fn magnitude(&self) -> f64 {
+        (self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w).sqrt()
+    }
+
+    /// Return a new tuple that is this tuple normalized.
+    pub fn normalize(&self) -> RayTracerTuple {
+        self / self.magnitude()
     }
 }
 
@@ -257,7 +264,7 @@ impl Mul<f64> for &RayTracerTuple {
 impl Div<f64> for RayTracerTuple {
     type Output = RayTracerTuple;
 
-    /// Divide a tuple by an f64, consuming the left-hand-side tuple, consuming the right-hand-side tuple, and returning a new tuple.
+    /// Divide a tuple by an f64, consuming the left-hand-side tuple, consuming the right-hand-side f64, and returning a new tuple.
     fn div(self, rhs: f64) -> RayTracerTuple {
         RayTracerTuple {
             x: self.x / rhs,
@@ -271,7 +278,7 @@ impl Div<f64> for RayTracerTuple {
 impl Div<f64> for &RayTracerTuple {
     type Output = RayTracerTuple;
 
-    /// Divide a tuple reference by an f64, borrowing the left-hand-side tuple, consuming the right-hand-side tuple, and returning a new tuple.
+    /// Divide a tuple reference by an f64, borrowing the left-hand-side tuple, consuming the right-hand-side f64, and returning a new tuple.
     fn div(self, rhs: f64) -> RayTracerTuple {
         RayTracerTuple {
             x: self.x / rhs,
@@ -473,5 +480,40 @@ mod tests {
         assert!((tuple_div.y - -1.0).abs() < EPSILON);
         assert!((tuple_div.z - 1.5).abs() < EPSILON);
         assert!((tuple_div.w - -2.0).abs() < EPSILON);
+    }
+
+    #[test]
+    fn tuple_magnitude() {
+        let mut tuple = RayTracerTuple::new_vector(1.0, 0.0, 0.0);
+        assert!((tuple.magnitude() - 1.0).abs() < EPSILON);
+
+        tuple = RayTracerTuple::new_vector(0.0, 1.0, 0.0);
+        assert!((tuple.magnitude() - 1.0).abs() < EPSILON);
+
+        tuple = RayTracerTuple::new_vector(0.0, 0.0, 1.0);
+        assert!((tuple.magnitude() - 1.0).abs() < EPSILON);
+
+        tuple = RayTracerTuple::new_vector(1.0, 2.0, 3.0);
+        assert!((tuple.magnitude() - 14.0_f64.sqrt()).abs() < EPSILON);
+
+        tuple = RayTracerTuple::new_vector(-1.0, -2.0, -3.0);
+        assert!((tuple.magnitude() - 14.0_f64.sqrt()).abs() < EPSILON);
+    }
+
+    #[test]
+    fn tuple_normalize() {
+        let mut tuple = RayTracerTuple::new_vector(4.0, 0.0, 0.0);
+        assert!(tuple
+            .normalize()
+            .is_equal_to(&RayTracerTuple::new_vector(1.0, 0.0, 0.0)));
+
+        tuple = RayTracerTuple::new_vector(1.0, 2.0, 3.0);
+        assert!(tuple.normalize().is_equal_to(&RayTracerTuple::new_vector(
+            1.0 / 14.0_f64.sqrt(),
+            2.0 / 14.0_f64.sqrt(),
+            3.0 / 14.0_f64.sqrt()
+        )));
+
+        assert!((tuple.normalize().magnitude() - 1.0).abs() < EPSILON);
     }
 }
