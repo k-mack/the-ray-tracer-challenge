@@ -49,6 +49,20 @@ impl RayTracerTuple {
     pub fn normalize(&self) -> RayTracerTuple {
         self / self.magnitude()
     }
+
+    /// Compute the dot product of the tuple.
+    pub fn dot_product(&self, other: &RayTracerTuple) -> f64 {
+        self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
+    }
+
+    /// Compute the cross product between this vector and another.
+    pub fn cross_product(&self, other: &RayTracerTuple) -> RayTracerTuple {
+        RayTracerTuple::new_vector(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        )
+    }
 }
 
 //
@@ -515,5 +529,25 @@ mod tests {
         )));
 
         assert!((tuple.normalize().magnitude() - 1.0).abs() < EPSILON);
+    }
+
+    #[test]
+    fn tuple_dot_product() {
+        let a = RayTracerTuple::new_vector(1.0, 2.0, 3.0);
+        let b = RayTracerTuple::new_vector(2.0, 3.0, 4.0);
+        assert!((a.dot_product(&b) - 20.0).abs() < EPSILON);
+        assert!((b.dot_product(&a) - 20.0).abs() < EPSILON);
+    }
+
+    #[test]
+    fn tuple_cross_product() {
+        let a = RayTracerTuple::new_vector(1.0, 2.0, 3.0);
+        let b = RayTracerTuple::new_vector(2.0, 3.0, 4.0);
+        assert!(a
+            .cross_product(&b)
+            .is_equal_to(&RayTracerTuple::new_vector(-1.0, 2.0, -1.0)));
+        assert!(b
+            .cross_product(&a)
+            .is_equal_to(&RayTracerTuple::new_vector(1.0, -2.0, 1.0)));
     }
 }
