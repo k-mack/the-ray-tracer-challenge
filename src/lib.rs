@@ -34,12 +34,11 @@ impl RayTracerTuple {
     /// Test if this tuple is equal to another.
     /// Note that this only considers the cartesian coordinates of the two tuples.
     pub fn is_equal_to(&self, other: &RayTracerTuple) -> bool {
-        if (self.x - other.x).abs() < EPSILON {
-            if (self.y - other.y).abs() < EPSILON {
-                if (self.z - other.z).abs() < EPSILON {
-                    return true;
-                }
-            }
+        if (self.x - other.x).abs() < EPSILON
+            && (self.y - other.y).abs() < EPSILON
+            && (self.z - other.z).abs() < EPSILON
+        {
+            return true;
         }
         false
     }
